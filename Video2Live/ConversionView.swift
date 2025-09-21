@@ -1,188 +1,97 @@
 import SwiftUI
 import Photos
 
-// Conversion state enum - using more explicit naming to avoid conflicts
-enum VideoConversionState: Equatable {
+// 转换状态枚举
+enum ConversionState {
     case ready
-    case converting(progress: Double)  // Converting, with progress
-    case completed                     // Conversion completed
-    case failed                        // Conversion failed
+    case converting(progress: Double)  // 转换中，带进度
+    case completed                     // 转换完成
 }
 
 struct ConversionView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var isPresented: Bool
-    @State private var currentConversionState: VideoConversionState = .ready
-    @State private var savedAssetID: String?
-    @State private var customMessage: String?
-    
+    @State private var conversionState: ConversionState = .ready
     let previewImage: UIImage
-    let onConversionStart: (@escaping (Double) -> Void, @escaping (Result<String, Error>) -> Void) -> Void
+    let onConversionStart: (@escaping (Double) -> Void, @escaping (Result<Void, Error>) -> Void) -> Void
     
     private var resultMessage: String {
-        if let customMessage = customMessage {
-            return customMessage
-        }
-        switch currentConversionState {
+        switch conversionState {
         case .ready:
-            return "Preparing conversion..."
+            return "选择视频后点击转换按钮"
         case .converting(let progress):
-            return "Converting... \(Int(progress * 100))%"
+            return "正在处理中... \(Int(progress * 100))%"
         case .completed:
-            return "✅ Live Photo saved to your Photos!"
-        case .failed:
-            return "❌ Conversion failed"
+            return "已成功创建Live Photo! 可在相册中查看。"
         }
     }
     
     var body: some View {
-        VStack(spacing: 20) {
-            // Preview Image
+        VStack {
             Image(uiImage: previewImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(height: 200)
-                .cornerRadius(15)
-                .shadow(radius: 5)
-                .padding(.top, 30)
+                .cornerRadius(10)
 
-            // Status Message
             Text(resultMessage)
-                .font(.title3)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-                .animation(.easeInOut, value: currentConversionState)
+                .padding()
 
-            // Progress View
-            if case let .converting(progressValue) = currentConversionState {
-                VStack(spacing: 8) {
-                    ProgressView(value: progressValue)
-                        .progressViewStyle(.linear)
-                        .tint(.blue)
-                        .scaleEffect(x: 1, y: 2)
-                    
-                    Text("\(Int(progressValue * 100))% Complete")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal, 40)
-                .animation(.easeInOut, value: progressValue)
+            if case let .converting(progress) = conversionState {
+                ProgressView(value: progress)
+                    .progressViewStyle(.linear)
+                    .padding()
             }
 
-            // Action Buttons - 直接显示结果，没有Start Conversion按钮
-            if case .completed = currentConversionState {
-                VStack(spacing: 12) {
-                    // View in Photos Button
-                    Button(action: {
-                        openInPhotos()
-                    }) {
-                        HStack {
-                            Image(systemName: "photo")
-                            Text("View in Photos")
+            if conversionState == .ready {
+                Button(action: {
+                    onConversionStart(
+                        { progress in
+                            withAnimation {
+                                conversionState = .converting(progress: progress)
+                            }
+                        },
+                        { result in
+                            withAnimation {
+                                switch result {
+                                case .success:
+                                    conversionState = .completed
+                                case .failure(let error):
+                                    print("转换失败: \(error)")
+                                    conversionState = .ready
+                                }
+                            }
                         }
+                    )
+                }) {
+                    Text("开始转换")
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.green)
-                        .cornerRadius(12)
-                    }
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                }
+                .padding()
+            }
 
-                    // Close Button
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        HStack {
-                            Image(systemName: "xmark.circle.fill")
-                            Text("Close")
-                        }
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(12)
-                    }
+            if conversionState == .completed {
+                Button("完成") {
+                    dismiss()
                 }
-            } else if case .failed = currentConversionState {
-                VStack(spacing: 12) {
-                    Button("Try Again") {
-                        resetConversionState()
-                        startConversion()
-                    }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .cornerRadius(12)
-                }
-            }
-        }
-        .padding()
-        // 自动开始转换
-        .onAppear {
-            if case .ready = currentConversionState {
-                startConversion()
-            }
-        }
-    }
-    
-    // Helper function to reset conversion state
-    private func resetConversionState() {
-        currentConversionState = .ready
-        customMessage = nil
-    }
-    
-    // Helper function to start conversion
-    private func startConversion() {
-        onConversionStart(
-            { progress in
-                withAnimation {
-                    currentConversionState = .converting(progress: progress)
-                }
-            },
-            { result in
-                withAnimation {
-                    switch result {
-                    case .success(let assetID):
-                        savedAssetID = assetID
-                        currentConversionState = .completed
-                    case .failure(let error):
-                        print("Conversion failed: \(error)")
-                        currentConversionState = .ready
-                        // Show error message
-                        customMessage = "Conversion failed. Please try again."
-                    }
-                }
-            }
-        )
-    }
-    
-    // Helper function to open in Photos app
-    private func openInPhotos() {
-        guard let assetID = savedAssetID else { return }
-        
-        // Fetch the asset and open it in Photos app
-        let result = PHAsset.fetchAssets(withLocalIdentifiers: [assetID], options: nil)
-        if result.firstObject != nil {
-            // Try to open the Photos app
-            if let photosURL = URL(string: "photos-redirect://") {
-                UIApplication.shared.open(photosURL)
+                .padding()
             }
         }
     }
 }
 
-// Preview
+// 预览
 #Preview {
     ConversionView(
         isPresented: .constant(true),
         previewImage: UIImage(systemName: "photo") ?? UIImage(),
         onConversionStart: { progressHandler, completionHandler in
-            // No actual conversion in preview
-            progressHandler(0.5)
-            completionHandler(.success("preview-asset-id"))
+            // 预览中不执行实际转换
         }
     )
-}
+} 

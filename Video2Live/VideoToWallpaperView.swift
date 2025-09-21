@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftUI
 import PhotosUI
 import AVFoundation
 
@@ -16,8 +15,15 @@ struct VideoThumbnail: Identifiable, Hashable {
 struct VideoToWallpaperView: View {
     @State private var selectedVideos: [PhotosPickerItem] = []
     @State private var videoThumbnails: [VideoThumbnail] = []
+    @State private var selectedTimeSegment: TimeSegment = .first
     @State private var showingConversion = false
     @State private var selectedPreviewImage: UIImage?
+    
+    enum TimeSegment: String {
+        case first = "前3秒"
+        case middle = "中间3秒"
+        case last = "后3秒"
+    }
     
     var body: some View {
         NavigationView {
@@ -101,6 +107,22 @@ struct VideoToWallpaperView: View {
                 Spacer()
                     .frame(height: 30)
                 
+                // 时间段选择
+                HStack(spacing: 25) {
+                    ForEach([TimeSegment.first, .middle, .last], id: \.self) { segment in
+                        Button(action: {
+                            selectedTimeSegment = segment
+                        }) {
+                            Text(segment.rawValue)
+                                .font(.system(size: 15))
+                                .foregroundColor(selectedTimeSegment == segment ? .blue : .primary)
+                        }
+                    }
+                }
+                
+                Spacer()
+                    .frame(height: 30)
+                
                 // 转换按钮
                 Button(action: {
                     if let firstVideo = selectedVideos.first {
@@ -114,8 +136,16 @@ struct VideoToWallpaperView: View {
                                 let asset = AVAsset(url: tempURL)
                                 let duration = try await asset.load(.duration).seconds
 
-                                // 使用视频中间点作为预览图
-                                let time = duration / 2
+                                // 计算时间点
+                                let time: Double
+                                switch selectedTimeSegment {
+                                case .first:
+                                    time = 0
+                                case .middle:
+                                    time = duration / 2
+                                case .last:
+                                    time = max(0, duration - 3)
+                                }
 
                                 // 提取关键帧
                                 let imageGenerator = AVAssetImageGenerator(asset: asset)
@@ -131,7 +161,7 @@ struct VideoToWallpaperView: View {
                         }
                     }
                 }) {
-                    Text("Convert to Wallpaper")
+                    Text("转换为壁纸")
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: UIScreen.main.bounds.width * 0.6)
@@ -148,7 +178,7 @@ struct VideoToWallpaperView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Video2Wallpaper")
+            .navigationTitle("视频转壁纸")
         }
         .sheet(isPresented: $showingConversion) {
             if let previewImage = selectedPreviewImage {
@@ -157,19 +187,8 @@ struct VideoToWallpaperView: View {
                     previewImage: previewImage,
                     onConversionStart: { progressHandler, completionHandler in
                         // 开始转换
-                        LivePhotoConverter.shared.convertVideosToLivePhotos(
-                            videos: selectedVideos,
-                            timeSegment: .first, // 壁纸功能默认使用前3秒
-                            progressHandler: progressHandler,
-                            completion: { result in
-                                switch result {
-                                case .success(let assetID):
-                                    completionHandler(.success(assetID))
-                                case .failure(let error):
-                                    completionHandler(.failure(error))
-                                }
-                            }
-                        )
+                        // 这里需要实现壁纸转换逻辑
+                        completionHandler(.success(()))
                     }
                 )
             }
