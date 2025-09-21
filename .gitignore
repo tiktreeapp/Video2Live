@@ -3,49 +3,64 @@
 .AppleDouble
 .LSOverride
 
-# Swift Package Manager
-.build/
-.swiftpm/
-Package.pins
-# 保留团队一致性的锁文件（如需忽略，取消注释下一行）
-# Package.resolved
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.Icon?
+.Spotlight-V100
+.Trashes
 
 # Xcode
-DerivedData/
 build/
-*.xcworkspace/xcuserdata/
-*.xcodeproj/project.xcworkspace/xcuserdata/
-*.xcodeproj/xcuserdata/
-*.xcscmblueprint
-*.xccheckout
-*.moved-aside
-*.xccoverage
+DerivedData/
 *.xcuserstate
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
 
-# Playgrounds
-timeline.xctimeline
-playground.xcworkspace
+# SwiftPM
+.build/
+.swiftpm/xcode/
+Package.resolved
 
-# CocoaPods（未使用可删除）
+# CocoaPods
 Pods/
-Podfile.lock
+*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+!Podfile
+!Podfile.lock
 
-# Carthage（未使用可删除）
+# Carthage
 Carthage/Build/
 
-# Fastlane（未使用可删除）
+# Accio dependency management
+Dependencies/
+.accio/
+
+# Fastlane
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
 
-# Archives
-*.ipa
-*.dSYM.zip
-*.dSYM
+# Code coverage
+*.gcno
+*.gcda
+*.profdata
 
-# Logs
+# Archives
+*.xcarchive
+
+# User-specific settings
+*.swp
+*.swo
 *.log
 
-# 用户本地配置
-*.local
+# Simulator
+*.simstate
+
+# Swift Data / Core Data generated binary artifacts should be committed as needed,
+# but ignore temporary SQLite journals
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
