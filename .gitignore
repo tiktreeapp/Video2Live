@@ -1,0 +1,51 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.pins
+# 保留团队一致性的锁文件（如需忽略，取消注释下一行）
+# Package.resolved
+
+# Xcode
+DerivedData/
+build/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.xccoverage
+*.xcuserstate
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# CocoaPods（未使用可删除）
+Pods/
+Podfile.lock
+
+# Carthage（未使用可删除）
+Carthage/Build/
+
+# Fastlane（未使用可删除）
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Archives
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Logs
+*.log
+
+# 用户本地配置
+*.local
