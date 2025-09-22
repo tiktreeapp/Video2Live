@@ -34,3 +34,6 @@ enum TimeSegment: String {
     case middle = "Middle 3s"
     case last = "Last 3s"
 }
+
+// 转换进度视图
+typealias ConversionProgressView = Video2Live.ConversionProgressView
