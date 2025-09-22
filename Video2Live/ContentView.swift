@@ -11,29 +11,17 @@ import AVFoundation
 import UniformTypeIdentifiers
 import Photos
 
-struct VideoThumbnail: Identifiable, Hashable {
-    let id = UUID()
-    let image: UIImage
-    let duration: String
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-}
+
 
 struct ContentView: View {
     @State private var selectedVideos: [PhotosPickerItem] = []
     @State private var videoThumbnails: [VideoThumbnail] = []
-    @State private var selectedTimeSegment: TimeSegment = .first
+
     @State private var selectedTab: Int = 0
     @State private var showingConversion = false
     @State private var selectedPreviewImage: UIImage?
     
-    enum TimeSegment: String {
-        case first = "前3秒"
-        case middle = "中间3秒"
-        case last = "后3秒"
-    }
+
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -59,7 +47,7 @@ struct ContentView: View {
                                         GridItem(.flexible()),
                                         GridItem(.flexible())
                                     ], spacing: 15) {
-                                        ForEach(videoThumbnails) { thumbnail in
+                                        ForEach(Array(videoThumbnails.enumerated()), id: \.element.id) { index, thumbnail in
                                             ZStack(alignment: .bottomLeading) {
                                                 Image(uiImage: thumbnail.image)
                                                     .resizable()
@@ -76,12 +64,27 @@ struct ContentView: View {
                                                                 let scale = max(size.width / imageSize.width, size.height / imageSize.height)
                                                                 let width = imageSize.width * scale
                                                                 let height = imageSize.height * scale
-                                                                let x = (width - size.width) / 2
-                                                                let y = (height - size.height) / 2
-                                                                // 可以根据需要调整offset
+                                                                let _ = (width - size.width) / 2
+                                                                let _ = (height - size.height) / 2
                                                             }
                                                         }
                                                     )
+                                                    .overlay(alignment: .topTrailing) {
+                                                        Button(action: {
+                                                            withAnimation {
+                                                                if index < videoThumbnails.count { videoThumbnails.remove(at: index) }
+                                                                if index < selectedVideos.count { selectedVideos.remove(at: index) }
+                                                            }
+                                                        }) {
+                                                            Image(systemName: "xmark.circle.fill")
+                                                                .font(.system(size: 16, weight: .bold))
+                                                                .foregroundColor(.white)
+                                                                .padding(6)
+                                                                .background(Color.black.opacity(0.6))
+                                                                .clipShape(Circle())
+                                                        }
+                                                        .padding(6)
+                                                    }
                                                 
                                                 // 视频时长和图标的半透明背景
                                                 HStack {
@@ -121,6 +124,13 @@ struct ContentView: View {
                                 if videos.count > 6 {
                                     selectedVideos = Array(videos.prefix(6))
                                 }
+                                // 先铺设占位缩略图，提升首屏感知
+                                videoThumbnails = videos.map { _ in
+                                    VideoThumbnail(
+                                        image: UIImage(systemName: "video") ?? UIImage(),
+                                        duration: "--:--"
+                                    )
+                                }
                                 Task {
                                     await loadVideoThumbnails()
                                 }
@@ -133,18 +143,7 @@ struct ContentView: View {
                     Spacer()
                         .frame(height: 30)
                     
-                    // 时间段选择
-                    HStack(spacing: 25) {
-                        ForEach([TimeSegment.first, .middle, .last], id: \.self) { segment in
-                            Button(action: {
-                                selectedTimeSegment = segment
-                            }) {
-                                Text(segment.rawValue)
-                                    .font(.system(size: 15))
-                                    .foregroundColor(selectedTimeSegment == segment ? .blue : .primary)
-                            }
-                        }
-                    }
+
                     
                     Spacer()
                         .frame(height: 30)
@@ -155,7 +154,7 @@ struct ContentView: View {
                             // 加载视频数据并转换
                             Task {
                                 do {
-                                    let videoData = try await firstVideo.loadTransferable(type: Data.self)
+                                    guard let videoData = try await firstVideo.loadTransferable(type: Data.self) else { return }
                                     let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
                                     try videoData.write(to: tempURL)
 
@@ -163,16 +162,8 @@ struct ContentView: View {
                                     let asset = AVAsset(url: tempURL)
                                     let duration = try await asset.load(.duration).seconds
 
-                                    // 计算时间点
-                                    let time: Double
-                                    switch selectedTimeSegment {
-                                    case .first:
-                                        time = 0
-                                    case .middle:
-                                        time = duration / 2
-                                    case .last:
-                                        time = max(0, duration - 3)
-                                    }
+                                    // Choose middle point by default
+                                    let time: Double = duration / 2
 
                                     // 提取关键帧
                                     let imageGenerator = AVAssetImageGenerator(asset: asset)
@@ -183,12 +174,12 @@ struct ContentView: View {
                                     // 清理临时文件
                                     try FileManager.default.removeItem(at: tempURL)
                                 } catch {
-                                    print("转换失败: \(error)")
+                                    print("Conversion failed: \(error)")
                                 }
                             }
                         }
                     }) {
-                        Text("转换为 Live Photo")
+                        Text("Convert")
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: UIScreen.main.bounds.width * 0.6)
@@ -205,25 +196,25 @@ struct ContentView: View {
                     
                     Spacer()
                 }
-                .navigationTitle("视频转实况")
+                .navigationTitle("Video to Live")
             }
             .tabItem {
                 Image(systemName: "play.circle.fill")
-                Text("视频转实况")
+                Text("Video to Live")
             }
             .tag(0)
             
             VideoToWallpaperView()
                 .tabItem {
                     Image(systemName: "square.grid.2x2.fill")
-                    Text("实况拼图")
+                    Text("Video to Wallpaper")
                 }
                 .tag(1)
             
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
-                    Text("设置")
+                    Text("Settings")
                 }
                 .tag(2)
         }
@@ -239,56 +230,73 @@ struct ContentView: View {
         }
         .tint(.blue)
         
-        // 添加转换页面的 sheet
+        // 转换进度（使用带列表行的进度视图）
         .sheet(isPresented: $showingConversion) {
-            if let previewImage = selectedPreviewImage {
-                ConversionView(
-                    isPresented: $showingConversion,
-                    previewImage: previewImage,
-                    onConversionStart: { progressHandler, completionHandler in
-                        // 开始转换
-                        // 这里需要实现实际的转换逻辑
-                        completionHandler(.success(()))
-                    }
-                )
-            }
+            ConversionProgressView(
+                isPresented: $showingConversion,
+                previewImages: videoThumbnails.map { $0.image },
+                onConversionStart: { progressAndIndexHandler, completionHandler in
+                    LivePhotoConverter.shared.convertVideosToLivePhotos(
+                        videos: selectedVideos,
+                        timeSegment: .middle,
+                        progressHandler: { progress in
+                            // 单/多视频：将总体进度映射到当前索引（简化为0）
+                            progressAndIndexHandler(progress, 0)
+                        },
+                        completion: { result in
+                            switch result {
+                            case .success:
+                                completionHandler(Result.success([]))
+                            case .failure(let error):
+                                completionHandler(.failure(error))
+                            }
+                        }
+                    )
+                }
+            )
         }
     }
     
-    // 加载视频缩略图
+    // 加载视频缩略图（并发生成，按索引回填之前的占位）
     private func loadVideoThumbnails() async {
-        videoThumbnails.removeAll()
-        
-        for video in selectedVideos {
-            do {
-                if let videoData = try await video.loadTransferable(type: Data.self) {
-                    let tempDir = FileManager.default.temporaryDirectory
-                    let tempURL = tempDir.appendingPathComponent(UUID().uuidString + ".mov")
-                    
+        await withTaskGroup(of: (Int, VideoThumbnail?)?.self) { group in
+            for (index, video) in selectedVideos.enumerated() {
+                group.addTask {
                     do {
-                        try videoData.write(to: tempURL)
-                        print("✅ 视频数据已写入临时文件: \(tempURL.path)")
-                        
-                        let asset = AVAsset(url: tempURL)
-                        if let thumbnail = try await asset.generateThumbnail() {
-                            let duration = asset.duration.seconds
-                            let formattedDuration = formatDuration(duration)
-                            let videoThumbnail = VideoThumbnail(
-                                image: thumbnail,
-                                duration: formattedDuration
-                            )
-                            DispatchQueue.main.async {
-                                videoThumbnails.append(videoThumbnail)
+                        if let videoData = try await video.loadTransferable(type: Data.self) {
+                            let tempDir = FileManager.default.temporaryDirectory
+                            let tempURL = tempDir.appendingPathComponent(UUID().uuidString + ".mov")
+                            do {
+                                try videoData.write(to: tempURL)
+                                let asset = AVAsset(url: tempURL)
+                                defer { try? FileManager.default.removeItem(at: tempURL) }
+                                
+                                if let thumbnail = try await asset.generateThumbnail() {
+                                    let duration = asset.duration.seconds
+                                    let formattedDuration = formatDuration(duration)
+                                    return (index, VideoThumbnail(image: thumbnail, duration: formattedDuration))
+                                }
+                            } catch {
+                                print("Write/process temp file failed: \(error)")
                             }
                         }
-                        
-                        try? FileManager.default.removeItem(at: tempURL)
                     } catch {
-                        print("❌ 写入临时文件失败: \(error)")
+                        print("Load video failed: \(error)")
+                    }
+                    return (index, nil)
+                }
+            }
+            
+            for await result in group {
+                if let (index, thumb) = result, let thumb = thumb {
+                    await MainActor.run {
+                        if index < videoThumbnails.count {
+                            videoThumbnails[index] = thumb
+                        } else {
+                            videoThumbnails.append(thumb)
+                        }
                     }
                 }
-            } catch {
-                print("❌ 加载视频失败: \(error)")
             }
         }
     }
@@ -372,7 +380,7 @@ struct ShareLivePhotoView: View {
                     rootVC.present(activityVC, animated: true)
                 }
             }) {
-                Label("分享图片", systemImage: "square.and.arrow.up")
+                Label("Share Image", systemImage: "square.and.arrow.up")
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)
@@ -380,6 +388,170 @@ struct ShareLivePhotoView: View {
             }
         }
         .padding()
+    }
+}
+
+struct TitledConversionProgressView: View {
+    @Binding var isPresented: Bool
+    let previewImages: [UIImage]
+    // progress(overall, index), completion(result with [assetIDs])
+    let onConversionStart: (@escaping (Double, Int) -> Void, @escaping (Result<[String], Error>) -> Void) -> Void
+
+    @State private var overallProgress: Double = 0
+    @State private var currentIndex: Int = 0
+    @State private var total: Int = 0
+    @State private var state: LocalState = .converting
+    @State private var assetIDs: [String] = []
+
+    enum LocalState { case converting, completed, failed }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Title bar
+            HStack {
+                Text("Converting to Live Photo")
+                    .font(.headline)
+                Spacer()
+                if state == .converting {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                        .scaleEffect(0.8)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 24)
+            .background(Color(.systemGray6))
+
+            // Content
+            VStack(spacing: 16) {
+                if state == .converting {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("Overall Progress")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("\(Int(overallProgress * 100))%")
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
+                        }
+                        ProgressView(value: overallProgress)
+                            .progressViewStyle(.linear)
+                            .tint(.blue)
+                    }
+                }
+
+                if !previewImages.isEmpty {
+                    HStack(spacing: 12) {
+                        ForEach(previewImages.indices, id: \.self) { i in
+                            Image(uiImage: previewImages[i])
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 40, height: 40)
+                                .cornerRadius(8)
+                                .clipped()
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color(.systemGray4), lineWidth: 0.5)
+                                )
+                        }
+                        Spacer()
+                    }
+                }
+
+                Group {
+                    switch state {
+                    case .converting:
+                        HStack {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .foregroundColor(.blue)
+                            Text("Converting item \(min(currentIndex + 1, max(total,1))) of \(max(total,1))")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
+                    case .completed:
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("All items converted successfully")
+                                .font(.subheadline)
+                                .foregroundColor(.green)
+                            Spacer()
+                        }
+                    case .failed:
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                            Text("Conversion failed")
+                                .font(.subheadline)
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
+                    }
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if state != .converting {
+                Divider()
+                    .background(Color(.systemGray4))
+                HStack(spacing: 8) {
+                    Button("Close") {
+                        isPresented = false
+                    }
+                    .frame(maxWidth: .infinity)
+                    if state == .completed && !assetIDs.isEmpty {
+                        Button("View in Photos") {
+                            if let photosURL = URL(string: "photos-redirect://") {
+                                UIApplication.shared.open(photosURL)
+                            }
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(Color.green)
+                        .cornerRadius(8)
+                    }
+                }
+                .padding()
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(radius: 20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.systemGray4), lineWidth: 0.5)
+        )
+        .onAppear { start() }
+    }
+
+    private func start() {
+        total = previewImages.count
+        onConversionStart(
+            { overall, index in
+                withAnimation {
+                    self.overallProgress = overall
+                    self.currentIndex = index
+                }
+            },
+            { result in
+                withAnimation {
+                    switch result {
+                    case .success(let ids):
+                        self.assetIDs = ids
+                        self.state = .completed
+                        self.overallProgress = 1.0
+                    case .failure(let error):
+                        self.state = .failed
+                        print("❌ Conversion failed: \(error)")
+                    }
+                }
+            }
+        )
     }
 }
 

@@ -2,7 +2,7 @@ import SwiftUI
 import Photos
 
 // 转换状态枚举
-enum ConversionState {
+enum ProgressState {
     case converting
     case completed
     case failed
@@ -16,7 +16,7 @@ struct ConversionProgressView: View {
     @State private var currentVideoIndex: Int = 0
     @State private var totalVideos: Int = 0
     @State private var videoProgresses: [Double] = []
-    @State private var conversionState: ConversionState = .converting
+    @State private var conversionState: ProgressState = .converting
     @State private var convertedAssetIDs: [String] = []
     
     let previewImages: [UIImage]
@@ -38,7 +38,8 @@ struct ConversionProgressView: View {
                         .scaleEffect(0.8)
                 }
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.vertical, 24)
             .background(Color(.systemGray6))
             
             // 内容区域
@@ -147,14 +148,7 @@ struct ConversionProgressView: View {
                 .padding()
             }
         }
-        .frame(maxWidth: 400, maxHeight: 500)
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(radius: 20)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.systemGray4), lineWidth: 0.5)
-        )
+        .presentationDetents([.medium, .large])
         .onAppear {
             startConversion()
         }
