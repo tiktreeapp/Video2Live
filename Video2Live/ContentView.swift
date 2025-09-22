@@ -233,7 +233,7 @@ struct ContentView: View {
         
         // 转换进度（使用带列表行的进度视图）
         .sheet(isPresented: $showingConversion) {
-            ConversionProgressView(
+            Video2Live.ConversionProgressView(
                 isPresented: $showingConversion,
                 previewImages: videoThumbnails.map { $0.image },
                 onConversionStart: { progressAndIndexHandler, completionHandler in
