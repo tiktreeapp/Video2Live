@@ -169,7 +169,7 @@ struct VideoToWallpaperView: View {
         }
         .sheet(isPresented: $showingConversion) {
             // 优先使用带每个视频进度的视图；如编译报错可暂时改回 TitledConversionProgressView
-            Video2Live.ConversionProgressView(
+            ConversionProgressView(
                 isPresented: $showingConversion,
                 previewImages: videoThumbnails.map { $0.image },
                 onConversionStart: { progressAndIndexHandler, completionHandler in
@@ -183,7 +183,7 @@ struct VideoToWallpaperView: View {
                         completion: { result in
                             switch result {
                             case .success:
-                                completionHandler(Result.success([]))
+                                completionHandler(.success([]))
                             case .failure(let error):
                                 completionHandler(.failure(error))
                             }
