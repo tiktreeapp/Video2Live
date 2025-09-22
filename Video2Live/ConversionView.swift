@@ -2,7 +2,7 @@ import SwiftUI
 import Photos
 
 // 转换状态枚举
-enum ConversionState {
+enum ConversionFlowState {
     case ready
     case converting(progress: Double)  // 转换中，带进度
     case completed                     // 转换完成
@@ -11,23 +11,51 @@ enum ConversionState {
 struct ConversionView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var isPresented: Bool
-    @State private var conversionState: ConversionState = .ready
+    @State private var conversionState: ConversionFlowState = .ready
     let previewImage: UIImage
     let onConversionStart: (@escaping (Double) -> Void, @escaping (Result<Void, Error>) -> Void) -> Void
     
     private var resultMessage: String {
         switch conversionState {
         case .ready:
-            return "选择视频后点击转换按钮"
+            return "Select a video and tap Convert"
         case .converting(let progress):
-            return "正在处理中... \(Int(progress * 100))%"
+            return "Processing... \(Int(progress * 100))%"
         case .completed:
-            return "已成功创建Live Photo! 可在相册中查看。"
+            return "Live Photo created! You can view it in Photos."
         }
     }
     
     var body: some View {
         VStack {
+            // Auto-start conversion when the sheet appears to avoid a blank page
+            Color.clear
+                .frame(height: 0)
+                .onAppear {
+                    if case .ready = conversionState {
+                        withAnimation {
+                            conversionState = .converting(progress: 0)
+                        }
+                        onConversionStart(
+                            { progress in
+                                withAnimation {
+                                    conversionState = .converting(progress: progress)
+                                }
+                            },
+                            { result in
+                                withAnimation {
+                                    switch result {
+                                    case .success:
+                                        conversionState = .completed
+                                    case .failure(let error):
+                                        print("Conversion failed: \(error)")
+                                        conversionState = .ready
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
             Image(uiImage: previewImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -43,7 +71,7 @@ struct ConversionView: View {
                     .padding()
             }
 
-            if conversionState == .ready {
+            if case .ready = conversionState {
                 Button(action: {
                     onConversionStart(
                         { progress in
@@ -57,14 +85,14 @@ struct ConversionView: View {
                                 case .success:
                                     conversionState = .completed
                                 case .failure(let error):
-                                    print("转换失败: \(error)")
+                                    print("Conversion failed: \(error)")
                                     conversionState = .ready
                                 }
                             }
                         }
                     )
                 }) {
-                    Text("开始转换")
+                    Text("Start Conversion")
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -75,13 +103,26 @@ struct ConversionView: View {
                 .padding()
             }
 
-            if conversionState == .completed {
-                Button("完成") {
-                    dismiss()
+            if case .completed = conversionState {
+                VStack {
+                    Button("Close") {
+                        dismiss()
+                    }
+                    .padding()
+                    
+                    Button("View in Photos") {
+                        if let photosURL = URL(string: "photos-redirect://") {
+                            UIApplication.shared.open(photosURL)
+                        }
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
                 }
-                .padding()
             }
         }
+        .presentationDetents([.medium, .large])
     }
 }
 
