@@ -6,6 +6,9 @@ struct SettingsView: View {
     @AppStorage("watermarkText") private var watermarkText = "Video2Live"
     @AppStorage("outputQuality") private var outputQuality = 1.0
     @AppStorage("enableAutoSave") private var enableAutoSave = true
+    // Share sheet state
+    @State private var isShareSheetPresented = false
+    @State private var shareItems: [Any] = []
     
     // 应用信息
     @State private var appVersion = "1.0"
@@ -14,65 +17,47 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             Form {
-                // 转换设置
-                Section(header: Text("转换设置")) {
-                    Toggle("自动保存到相册", isOn: $enableAutoSave)
+                // Conversion Settings
+                Section(header: Text("Conversion Settings")) {
+                    Toggle("Auto-save to Photos", isOn: $enableAutoSave)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("输出质量")
+                        Text("Output Quality")
                         Slider(value: $outputQuality, in: 0.1...1.0, step: 0.1) {
-                            Text("输出质量")
+                            Text("Output Quality")
                         }
-                        Text("质量: \(Int(outputQuality * 100))%")
+                        Text("Quality: \(Int(outputQuality * 100))%")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
                 
-                // 水印设置
-                Section(header: Text("水印设置")) {
-                    Toggle("添加水印", isOn: $enableWatermark)
-                    
-                    if enableWatermark {
-                        TextField("水印文字", text: $watermarkText)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                    }
-                }
-                
-                // 关于应用
-                Section(header: Text("关于应用")) {
-                    HStack {
-                        Text("版本")
-                        Spacer()
-                        Text("\(appVersion) (\(buildNumber))")
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Link("隐私政策", destination: URL(string: "https://www.example.com/privacy")!)
-                    
-                    Link("用户协议", destination: URL(string: "https://www.example.com/terms")!)
-                }
-                
-                // 操作按钮
+                // Actions
                 Section {
-                    Button("清除缓存") {
-                        clearCache()
+                    Button("Share") {
+                        shareApp()
                     }
                     
-                    Button("反馈问题") {
-                        sendFeedback()
-                    }
-                    .foregroundColor(.blue)
-                    
-                    Button("评分支持") {
+                    Button("Rate us") {
                         openAppStore()
                     }
                     .foregroundColor(.green)
                 }
             }
-            .navigationTitle("设置")
-            .onAppear {
-                loadAppInfo()
+            .navigationTitle("Settings")
+            .onAppear { loadAppInfo() }
+            .sheet(isPresented: $isShareSheetPresented) {
+                ShareSheet(items: shareItems)
+            }
+            // 复用与首页一致的纯白底栏样式
+            .safeAreaInset(edge: .bottom) {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 0)
+                    Color(.systemGray5)
+                        .frame(height: 0.5)
+                        .offset(y: -48)
+                }
+                .background(.white)
             }
         }
     }
@@ -105,18 +90,18 @@ struct SettingsView: View {
         }
     }
     
-    // 发送反馈
-    private func sendFeedback() {
-        // 打开邮件应用发送反馈
-        if let url = URL(string: "mailto:feedback@example.com?subject=Video2Live Feedback") {
-            UIApplication.shared.open(url)
-        }
+    // Share via system share sheet
+    private func shareApp() {
+        // Replace with your app link or any content you want to share
+        let text = "One tap to convert Video to Live Photo by https://apps.apple.com/app/id6752836382"
+        shareItems = [text]
+        isShareSheetPresented = true
     }
     
     // 打开App Store评分
     private func openAppStore() {
         // 打开App Store进行评分
-        if let url = URL(string: "itms-apps://itunes.apple.com/app/id123456789") {
+        if let url = URL(string: "itms-apps://itunes.apple.com/app/id6752836382") {
             UIApplication.shared.open(url)
         }
     }
@@ -126,6 +111,14 @@ struct SettingsView: View {
         // 在实际应用中，这里应该显示一个UIAlertController或自定义的提示视图
         print(message)
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+    func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

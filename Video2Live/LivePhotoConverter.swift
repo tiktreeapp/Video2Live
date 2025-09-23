@@ -4,6 +4,11 @@ import Photos
 import UIKit
 import PhotosUI
 import SwiftUI
+import ImageIO
+import UniformTypeIdentifiers
+
+// CGImage MakerApple 字典中 Live Photo 的 Asset Identifier 键（行业通用为 "17"）
+private let kMakerAppleAssetIdentifier = "17"
 
 // 转换错误类型
 enum ConversionError: Error {
@@ -45,7 +50,7 @@ class LivePhotoConverter {
     // 转换视频为Live Photo
     func convertVideosToLivePhotos(
         videos: [Any],
-        timeSegment: ContentView.TimeSegment,
+        timeSegment: TimeSegment,
         progressHandler: @escaping ProgressHandler,
         completion: @escaping CompletionHandler
     ) {
@@ -268,25 +273,18 @@ class LivePhotoConverter {
             throw ConversionError.resourcesUnavailable
         }
         
-        // 保存图片 - 添加必要的元数据
+        // 保存图片 - 写入正确的 MakerApple AssetIdentifier 元数据
         if let cgImage = image.cgImage {
-            let uiImage = UIImage(cgImage: cgImage)
-            guard let imageData = uiImage.jpegData(compressionQuality: 1.0) else {
-                throw ConversionError.exportFailed
-            }
-            
-            let source = CGImageSourceCreateWithData(imageData as CFData, nil)!
-            
-            // 添加Live Photo元数据
-            let metadata = NSMutableDictionary()
-            metadata["com.apple.quicktime.live-photo"] = "1"
-            metadata["com.apple.quicktime.content.identifier"] = uuid
-            metadata["com.apple.quicktime.still-image-time"] = "0"
-            
             let destination = CGImageDestinationCreateWithURL(photoURL as CFURL, UTType.jpeg.identifier as CFString, 1, nil)!
-            CGImageDestinationAddImageFromSource(destination, source, 0, metadata)
+            let makerApple: [String: Any] = [
+                kMakerAppleAssetIdentifier: uuid
+            ]
+            let metadata: [String: Any] = [
+                kCGImagePropertyMakerAppleDictionary as String: makerApple
+            ]
+            CGImageDestinationAddImage(destination, cgImage, metadata as CFDictionary)
             if !CGImageDestinationFinalize(destination) {
-                log("⚠️ 添加图片元数据失败")
+                log("⚠️ 写入图片 MakerApple 元数据失败")
             }
         } else {
             guard let imageData = image.jpegData(compressionQuality: 1.0) else {
@@ -317,12 +315,14 @@ class LivePhotoConverter {
             try await PHPhotoLibrary.shared().performChanges {
                 let request = PHAssetCreationRequest.forAsset()
                 
-                // 添加资源 - 使用正确的选项
+                // 添加资源 - 使用正确的选项，并指定相同前缀文件名以帮助系统配对
                 let photoOptions = PHAssetResourceCreationOptions()
                 photoOptions.uniformTypeIdentifier = UTType.jpeg.identifier
+                photoOptions.originalFilename = photoFileName
                 
                 let videoOptions = PHAssetResourceCreationOptions()
                 videoOptions.uniformTypeIdentifier = UTType.quickTimeMovie.identifier
+                videoOptions.originalFilename = videoFileName
                 
                 // 添加资源 - 顺序很重要：先照片后视频
                 request.addResource(with: .photo, fileURL: photoURL, options: photoOptions)
@@ -461,7 +461,7 @@ class LivePhotoConverter {
     
     // 获取时间范围
     private func getTimeRange(
-        for segment: ContentView.TimeSegment,
+        for segment: TimeSegment,
         duration: CMTime
     ) -> CMTimeRange {
         let totalSeconds = CMTimeGetSeconds(duration)
@@ -565,7 +565,7 @@ class LivePhotoConverter {
     // 修改 createLivePhotoDirectly 方法
     func createLivePhotoDirectly(
         from videoURL: URL,
-        timeSegment: ContentView.TimeSegment,
+        timeSegment: TimeSegment,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         Task {

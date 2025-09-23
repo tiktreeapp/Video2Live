@@ -20,6 +20,9 @@
 		A4ABA7632D88127000990502 /* LivePhotoConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4ABA7622D88127000990502 /* LivePhotoConverter.swift */; };
 		A4ABA7652D882C4D00990502 /* UIImage+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4ABA7642D882C4D00990502 /* UIImage+Extension.swift */; };
 		A4ABA76A2D883ACC00990502 /* LivePhotoEnhanced.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4ABA7692D883ACC00990502 /* LivePhotoEnhanced.swift */; };
+		B1B2C3D52D88BAAA00990502 /* VideoToWallpaperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B2C3D42D88AAAA00990502 /* VideoToWallpaperView.swift */; };
+		B1B2C3D52D88BAAB00990502 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B2C3D42D88AAAB00990502 /* SettingsView.swift */; };
+		B1B2C3D52D88BAAC00990502 /* ViewDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B2C3D42D88AAAC00990502 /* ViewDeclarations.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +60,9 @@
 		A4ABA7622D88127000990502 /* LivePhotoConverter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LivePhotoConverter.swift; sourceTree = "<group>"; };
 		A4ABA7642D882C4D00990502 /* UIImage+Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+Extension.swift"; sourceTree = "<group>"; };
 		A4ABA7692D883ACC00990502 /* LivePhotoEnhanced.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LivePhotoEnhanced.swift; sourceTree = "<group>"; };
+		B1B2C3D42D88AAAA00990502 /* VideoToWallpaperView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoToWallpaperView.swift; sourceTree = "<group>"; };
+		B1B2C3D42D88AAAB00990502 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B1B2C3D42D88AAAC00990502 /* ViewDeclarations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewDeclarations.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,6 +117,9 @@
 				A4ABA7642D882C4D00990502 /* UIImage+Extension.swift */,
 				A4ABA7622D88127000990502 /* LivePhotoConverter.swift */,
 				A4ABA7602D8811CC00990502 /* ConversionView.swift */,
+				B1B2C3D42D88AAAC00990502 /* ViewDeclarations.swift */,
+				B1B2C3D42D88AAAA00990502 /* VideoToWallpaperView.swift */,
+				B1B2C3D42D88AAAB00990502 /* SettingsView.swift */,
 				A4ABA7302D87FAF100990502 /* Video2LiveApp.swift */,
 				A4ABA7322D87FAF100990502 /* Persistence.swift */,
 				A4ABA7372D87FAF100990502 /* ContentView.swift */,
@@ -236,7 +245,6 @@
 			);
 			mainGroup = A4ABA7242D87FAF100990502;
 			packageReferences = (
-				A4ABA7682D8838C200990502 /* XCRemoteSwiftPackageReference "ffmpeg-kit" */,
 			);
 			productRefGroup = A4ABA72E2D87FAF100990502 /* Products */;
 			projectDirPath = "";
@@ -284,6 +292,9 @@
 				A4ABA7652D882C4D00990502 /* UIImage+Extension.swift in Sources */,
 				A4ABA76A2D883ACC00990502 /* LivePhotoEnhanced.swift in Sources */,
 				A4ABA7612D8811CC00990502 /* ConversionView.swift in Sources */,
+				B1B2C3D52D88BAAC00990502 /* ViewDeclarations.swift in Sources */,
+				B1B2C3D52D88BAAA00990502 /* VideoToWallpaperView.swift in Sources */,
+				B1B2C3D52D88BAAB00990502 /* SettingsView.swift in Sources */,
 				A4ABA7312D87FAF100990502 /* Video2LiveApp.swift in Sources */,
 				A4ABA7632D88127000990502 /* LivePhotoConverter.swift in Sources */,
 				A4ABA7382D87FAF100990502 /* ContentView.swift in Sources */,
@@ -445,14 +456,15 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Video2Live/Video2Live.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Video2Live/Preview Content\"";
-				DEVELOPMENT_TEAM = 6N2H82J6ZV;
+				DEVELOPMENT_TEAM = KX52CM99ZN;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "请打开相册完整权限选择视频用来转换为实况Live图";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "请打开相册完整权限选择视频用来转换为实况Live图";
+				INFOPLIST_KEY_CFBundleDisplayName = Video2Live;
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Please allow full photo library access to select videos for converting to Live Photos";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Please allow full photo library access to select videos for converting to Live Photos";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -468,7 +480,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.7;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.shuaiba.Video2Live;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tiktreeapp.video2live;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -486,14 +498,15 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Video2Live/Video2Live.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Video2Live/Preview Content\"";
-				DEVELOPMENT_TEAM = 6N2H82J6ZV;
+				DEVELOPMENT_TEAM = KX52CM99ZN;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "请打开相册完整权限选择视频用来转换为实况Live图";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "请打开相册完整权限选择视频用来转换为实况Live图";
+				INFOPLIST_KEY_CFBundleDisplayName = Video2Live;
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Please allow full photo library access to select videos for converting to Live Photos";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Please allow full photo library access to select videos for converting to Live Photos";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -509,7 +522,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.7;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.shuaiba.Video2Live;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tiktreeapp.video2live;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -650,17 +663,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		A4ABA7682D8838C200990502 /* XCRemoteSwiftPackageReference "ffmpeg-kit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/arthenica/ffmpeg-kit";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCVersionGroup section */
 		A4ABA7342D87FAF100990502 /* Video2Live.xcdatamodeld */ = {
