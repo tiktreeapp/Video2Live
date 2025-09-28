@@ -11,6 +11,7 @@ struct VideoToWallpaperView: View {
 
     @State private var showingConversion = false
     @State private var selectedPreviewImage: UIImage?
+    @State private var showPhotoPicker = false
     
 
     var body: some View {
@@ -86,14 +87,28 @@ struct VideoToWallpaperView: View {
                     
                     // + 按钮使用ZStack独立定位
                     if videoThumbnails.count < 6 {
-                        PhotosPicker(selection: $selectedVideos,
-                                    matching: .videos,
-                                    photoLibrary: .shared()) {
+                        Button {
+                            PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+                                DispatchQueue.main.async {
+                                    // 如果已授权或受限但可读写，打开选择器
+                                    switch status {
+                                    case .authorized, .limited:
+                                        showPhotoPicker = true
+                                    default:
+                                        // 未授权则不打开
+                                        break
+                                    }
+                                }
+                            }
+                        } label: {
                             Image(systemName: "plus.circle.fill")
                                 .resizable()
                                 .frame(width: 45, height: 45)
                                 .foregroundColor(.blue)
                         }
+                        .photosPicker(isPresented: $showPhotoPicker,
+                                      selection: $selectedVideos,
+                                      matching: .videos)
                         .offset(y: 90)
                         .onChange(of: selectedVideos) { videos in
                             if videos.count > 6 {

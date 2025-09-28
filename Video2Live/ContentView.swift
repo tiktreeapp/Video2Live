@@ -21,9 +21,9 @@ struct ContentView: View {
     @State private var selectedTab: Int = 0
     @State private var showingConversion = false
     @State private var selectedPreviewImage: UIImage?
-    
+    @State private var showPermissionAlert = false
+    @State private var showPhotoPicker = false
 
-    
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationView {
@@ -112,14 +112,28 @@ struct ContentView: View {
                         
                         // + 按钮使用ZStack独立定位
                         if videoThumbnails.count < 6 {
-                            PhotosPicker(selection: $selectedVideos,
-                                        matching: .videos,
-                                        photoLibrary: .shared()) {
+                            Button {
+                                PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+                                    DispatchQueue.main.async {
+                                        // 如果已授权或受限但可读写，打开选择器
+                                        switch status {
+                                        case .authorized, .limited:
+                                            showPhotoPicker = true
+                                        default:
+                                            // 未授权则不打开
+                                            break
+                                        }
+                                    }
+                                }
+                            } label: {
                                 Image(systemName: "plus.circle.fill")
                                     .resizable()
                                     .frame(width: 45, height: 45)
                                     .foregroundColor(.blue)
                             }
+                            .photosPicker(isPresented: $showPhotoPicker,
+                                          selection: $selectedVideos,
+                                          matching: .videos)
                             .offset(y: 90) // 使用offset来调整位置，不会影响其他元素
                             .onChange(of: selectedVideos) { videos in
                                 if videos.count > 6 {
@@ -372,7 +386,8 @@ struct ShareLivePhotoView: View {
             // 使用标准 Button 替代 ShareLink
             Button(action: {
                 // 创建活动视图控制器
-                let items: [Any] = [image]
+                let text = "One tap to convert Video to Live Photo by https://apps.apple.com/app/id6752836382"
+                let items: [Any] = [text]
                 let activityVC = UIActivityViewController(activityItems: items, applicationActivities: nil)
                 
                 // 获取当前的 UIWindow 场景
@@ -381,7 +396,7 @@ struct ShareLivePhotoView: View {
                     rootVC.present(activityVC, animated: true)
                 }
             }) {
-                Label("Share Image", systemImage: "square.and.arrow.up")
+                Label("Share App", systemImage: "square.and.arrow.up")
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)
